@@ -14,6 +14,9 @@ const Setting = sequelize.define("Setting", {
   description: {
     type: DataTypes.STRING,
   }
+},
+{
+  tableName: "Settings",
 });
 
 export default Setting;
