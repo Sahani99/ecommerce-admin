@@ -6,16 +6,15 @@ const Category = sequelize.define("Category", {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
-    validate: {
-      notEmpty: true, // Prevents saving empty strings
-    },
+    validate: { notEmpty: true },
   },
   description: {
     type: DataTypes.TEXT,
     allowNull: true,
   },
 }, {
-  timestamps: true, // Automatically adds createdAt and updatedAt
+  timestamps: true,
+  tableName: "Categories",
 });
 
 export default Category;

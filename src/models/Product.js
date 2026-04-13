@@ -5,35 +5,27 @@ const Product = sequelize.define("Product", {
   name: {
     type: DataTypes.STRING,
     allowNull: false,
-    validate: {
-      notEmpty: true,
-    },
+    validate: { notEmpty: true },
   },
-  description: {
-    type: DataTypes.TEXT,
-  },
+  description: DataTypes.TEXT,
   price: {
-    type: DataTypes.DECIMAL(10, 2), // 10 digits total, 2 after the decimal point
+    type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
     defaultValue: 0.00,
-    validate: {
-      min: 0, // Price cannot be negative
-    },
+    validate: { min: 0 },
   },
   stock: {
     type: DataTypes.INTEGER,
     allowNull: false,
     defaultValue: 0,
-    validate: {
-      min: 0, // Stock cannot be negative
-    },
+    validate: { min: 0 },
   },
   sku: {
     type: DataTypes.STRING,
-    unique: true, // Stock Keeping Unit (Unique identifier for inventory)
+    unique: true,
   },
 }, {
   timestamps: true,
+  tableName: "Products",
 });
-
 export default Product;
