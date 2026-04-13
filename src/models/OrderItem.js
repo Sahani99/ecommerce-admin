@@ -11,6 +11,9 @@ const OrderItem = sequelize.define("OrderItem", {
     type: DataTypes.DECIMAL(10, 2), // Price at the time of purchase
     allowNull: false,
   }
+},
+{
+  tableName: "OrderItems",
 });
 
 export default OrderItem;
