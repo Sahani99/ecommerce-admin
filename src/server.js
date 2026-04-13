@@ -1,0 +1,169 @@
+// import 'dotenv/config';
+// import express from 'express';
+// import AdminJS from 'adminjs';
+// import AdminJSExpress from '@adminjs/express';
+// import * as AdminJSSequelize from '@adminjs/sequelize';
+// import { sequelize, User } from './models/index.js';
+// import { adminOptions } from './admin/options.js';
+// import authRoutes from './routes/auth.js';
+
+// AdminJS.registerAdapter(AdminJSSequelize);
+
+// const start = async () => {
+//   const app = express();
+//   app.use(express.json());
+
+//   // 1. Requirement: Implement /api/login endpoint
+//   app.use('/api', authRoutes);
+
+//   const admin = new AdminJS(adminOptions);
+
+//   // 2. Requirement: Secure AdminJS with Authentication
+//   const adminRouter = AdminJSExpress.buildAuthenticatedRouter(admin, {
+//     authenticate: async (email, password) => {
+//       const user = await User.findOne({ where: { email } });
+//       if (user && await user.validPassword(password)) {
+//         return {
+//       email: user.email,
+//       role: user.role, 
+//       id: user.id // This is the crucial part for RBAC
+//        }; // Becomes currentAdmin in RBAC
+//       }
+//       return null;
+//     },
+//     cookieName: 'adminjs-session',
+//     cookiePassword: process.env.SESSION_SECRET,
+//   }, null, {
+//     resave: false,
+//     saveUninitialized: true,
+//     secret: process.env.SESSION_SECRET
+//   });
+
+//   app.use(admin.options.rootPath, adminRouter);
+
+//   try {
+//     await sequelize.authenticate();
+//     console.log('✅ Database connected.');
+//     // await sequelize.sync(); // Uncomment to sync models to DB
+
+//     const PORT = process.env.PORT || 5001;
+//     app.listen(PORT, () => {
+//       console.log(`🚀 Admin Panel: http://localhost:${PORT}/admin`);
+//       console.log(`🔑 Login API: http://localhost:${PORT}/api/login`);
+//     });
+//   } catch (error) {
+//     console.error('❌ Unable to connect to database:', error);
+//   }
+// };
+
+// start();
+
+import 'dotenv/config';
+import express from 'express';
+import cookieParser from 'cookie-parser';
+import jwt from 'jsonwebtoken';
+import session from 'express-session';
+import AdminJS from 'adminjs';
+import AdminJSExpress from '@adminjs/express';
+import * as AdminJSSequelize from '@adminjs/sequelize';
+
+// Ensure these paths match your folder structure exactly
+import { sequelize, User } from './models/index.js';
+import { adminOptions } from './admin/options.js';
+import authRoutes from './routes/auth.js';
+import dashboardRoutes from './routes/dashboard.js';
+
+AdminJS.registerAdapter(AdminJSSequelize);
+
+const start = async () => {
+  const app = express();
+  app.use(express.json());
+  app.use(cookieParser());
+
+  // Initialize AdminJS first
+  const admin = new AdminJS(adminOptions);
+  if (process.env.NODE_ENV !== 'production') {
+  await admin.watch()
+}
+
+  // Requirement: Implement /api/login endpoint
+  app.use('/api', authRoutes);
+  app.use('/api/dashboard', dashboardRoutes);
+
+  // Requirement: Secure AdminJS with Authentication
+  // Use the 'admin' instance created above
+  const adminRouter = AdminJSExpress.buildAuthenticatedRouter(admin, {
+    authenticate: async (email, password, context) => {
+      try {
+        const user = await User.findOne({ where: { email } });
+        if (user && await user.validPassword(password)) {
+          const token = jwt.sign(
+            { id: user.id, email: user.email, role: user.role },
+            process.env.JWT_SECRET || 'fallback_jwt_secret',
+            { expiresIn: '1h' }
+          );
+
+          if (context?.res?.cookie) {
+            context.res.cookie('admin_jwt', token, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+              maxAge: 60 * 60 * 1000,
+            });
+          }
+          return {
+            email: user.email,
+            role: user.role, // Must be exactly 'admin' or 'user'
+            id: user.id
+          };
+        }
+      } catch (err) {
+        console.error('Auth error:', err);
+      }
+      return null;
+    },
+    cookieName: 'adminjs-session',
+    cookiePassword: process.env.SESSION_SECRET || 'a-very-secret-password-12345678',
+  }, null, {
+    resave: false,
+    saveUninitialized: true,
+    secret: process.env.SESSION_SECRET || 'a-very-secret-password-12345678',
+    cookie: {
+      httpOnly: true,
+      secure: false, // Set to true if using HTTPS
+    }
+  });
+
+  // Mount AdminJS with a JWT verification layer before the router
+  app.use(admin.options.rootPath, (req, res, next) => {
+    const token = req.cookies?.admin_jwt || (req.headers.authorization?.startsWith('Bearer ') && req.headers.authorization.split(' ')[1]);
+    if (!token) {
+      return next();
+    }
+    try {
+      req.adminJwt = jwt.verify(token, process.env.JWT_SECRET || 'fallback_jwt_secret');
+    } catch (err) {
+      res.clearCookie('admin_jwt');
+    }
+    return next();
+  }, adminRouter);
+
+  try {
+    await sequelize.authenticate();
+    console.log('✅ Database connected.');
+    console.log("User model table:", User.getTableName());
+    
+    // Sync models (creates tables if they don't exist)
+    await sequelize.sync(); 
+
+    const PORT = process.env.PORT || 5001;
+    app.listen(PORT, () => {
+      console.log(`🚀 Admin Panel: http://localhost:${PORT}${admin.options.rootPath}`);
+      console.log(`🔑 Login API: http://localhost:${PORT}/api/login`);
+    });
+  } catch (error) {
+    console.error('❌ Unable to connect to database:', error);
+  }
+};
+
+start();
