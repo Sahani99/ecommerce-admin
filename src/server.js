@@ -96,6 +96,9 @@ const start = async () => {
       await admin.initialize(); 
     }
 
+    const adminAssetsPath = path.join(process.cwd(), '.adminjs');
+    app.use('/admin/frontend/assets', express.static(adminAssetsPath));
+
     // 4. API Login Route
     app.use('/api', authRoutes);
 
