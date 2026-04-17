@@ -39,6 +39,7 @@ const sequelize = new Sequelize(databaseUrl, {
       rejectUnauthorized: false, 
     },
   },
+  retry: { max: 0 } 
 });
 
 export default sequelize;
