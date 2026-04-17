@@ -21,9 +21,17 @@ const start = async () => {
   app.use(cookieParser());
 
   // Initialize AdminJS first
-  const admin = new AdminJS(adminOptions);
-  if (process.env.NODE_ENV !== 'production') {
-  await admin.watch()
+//   const admin = new AdminJS(adminOptions);
+//   if (process.env.NODE_ENV !== 'production') {
+//   await admin.watch()
+// }
+
+const admin = new AdminJS(adminOptions);
+
+if (process.env.NODE_ENV === 'production') {
+  await admin.initialize();
+} else {
+  await admin.watch();
 }
 
   // Requirement: Implement /api/login endpoint
