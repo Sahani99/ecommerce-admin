@@ -16,6 +16,9 @@ import dashboardRoutes from './routes/dashboard.js';
 AdminJS.registerAdapter(AdminJSSequelize);
 
 const start = async () => {
+
+  app.use('/admin/frontend/assets', express.static(path.join(__dirname, '../.adminjs')));
+
   const app = express();
   app.use(express.json());
   app.use(cookieParser());
