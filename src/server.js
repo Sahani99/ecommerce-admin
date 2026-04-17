@@ -90,15 +90,18 @@ const start = async () => {
     // 2. Initialize AdminJS Instance
     const admin = new AdminJS(adminOptions);
 
-    // 3. BUILD BUNDLE (Crucial for Render)
-    // We do NOT serve static files manually. initialize() handles the creation.
-    if (process.env.NODE_ENV === 'production') {
-      console.log('Building production bundle... please wait.');
-      await admin.initialize(); 
-    }
+    // 3. BUILD BUNDLE (Crucial for Render and custom components)
+    // Always initialize to ensure custom React components are bundled
+    console.log('Building AdminJS bundle...');
+    await admin.initialize();
 
     const adminAssetsPath = path.join(process.cwd(), '.adminjs');
-    app.use('/admin/frontend/assets', express.static(adminAssetsPath));
+    app.use('/admin/frontend/assets', express.static(adminAssetsPath, { 
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript');
+        if (filePath.endsWith('.css')) res.setHeader('Content-Type', 'text/css');
+      }
+    }));
 
     // 4. API Login Route
     app.use('/api', authRoutes);
