@@ -20,7 +20,7 @@ import { Sequelize } from 'sequelize';
 
 dotenv.config();
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = process.env.DATABASE_URL || 'postgres://user:pass@localhost:5432/db';
 
 // This helps us debug on Render without showing the password
 if (databaseUrl) {
@@ -39,6 +39,7 @@ const sequelize = new Sequelize(databaseUrl, {
       rejectUnauthorized: false, 
     },
   },
+  // Prevent build hang
   retry: { max: 0 } 
 });
 

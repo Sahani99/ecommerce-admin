@@ -64,7 +64,6 @@
 // };
 
 // start();
-
 import 'dotenv/config';
 import express from 'express';
 import AdminJS from 'adminjs';
@@ -81,29 +80,21 @@ const start = async () => {
   const app = express();
   app.use(express.json());
 
+  // 1. Serve static assets FROM the .adminjs folder
+  // This fixes the 404 / MIME type error
+  app.use('/admin/frontend/assets', express.static(path.join(process.cwd(), '.adminjs')));
+
   try {
-    // 1. Database Connection & Sync
     await sequelize.authenticate();
-    await sequelize.sync(); 
     console.log('✅ DB Connected');
 
-    // 2. Initialize AdminJS Instance
     const admin = new AdminJS(adminOptions);
 
-    // 4. API Login Route
+    // 2. IMPORTANT: Do NOT call admin.initialize() or admin.watch() here on Render.
+    // The build script handled it. Just mount the router.
+
     app.use('/api', authRoutes);
 
-    // 3. BUILD BUNDLE (Crucial for Render and custom components)
-    // Must be done BEFORE buildAuthenticatedRouter
-    console.log('🔨 Initializing AdminJS with custom components...');
-    try {
-      await admin.initialize();
-      console.log('✅ AdminJS bundle created successfully');
-    } catch (bundleError) {
-      console.warn('⚠️ Bundle initialization warning:', bundleError.message);
-    }
-
-    // 5. AdminJS Authenticated Router
     const adminRouter = AdminJSExpress.buildAuthenticatedRouter(admin, {
       authenticate: async (email, password) => {
         const user = await User.findOne({ where: { email } });
@@ -125,35 +116,11 @@ const start = async () => {
       }
     });
 
-    // 6. Mount the Admin Router
-    // The adminRouter from buildAuthenticatedRouter handles all assets internally
     app.use(admin.options.rootPath, adminRouter);
-
-    // 7. CRITICAL: Fallback static route for components.bundle.js
-    // This ensures the custom components bundle is always served with correct MIME type
-    const fs = await import('fs');
-    const adminAssetsPath = path.join(process.cwd(), '.adminjs');
-    if (fs.default.existsSync(adminAssetsPath)) {
-      app.use('/admin/frontend/assets', express.static(adminAssetsPath, { 
-        maxAge: 0, // No caching to avoid stale bundles
-        setHeaders: (res, filePath) => {
-          res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-          if (filePath.endsWith('.js')) {
-            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-          }
-          if (filePath.endsWith('.css')) {
-            res.setHeader('Content-Type', 'text/css; charset=utf-8');
-          }
-        }
-      }));
-      console.log(`✅ Static assets mounted from ${adminAssetsPath}`);
-    } else {
-      console.warn(`⚠️ AdminJS assets directory not found at ${adminAssetsPath}`);
-    }
 
     const PORT = process.env.PORT || 5001;
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Admin Panel ready at http://0.0.0.0:${PORT}/admin`);
+      console.log(`🚀 Admin Panel ready at https://ecommerce-admin-x4j1.onrender.com/admin`);
     });
 
   } catch (error) {
