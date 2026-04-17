@@ -1,12 +1,9 @@
 {
   "name": "ecommerce-admin",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "scripts": {
     "start": "node src/server.js",
-  "build": "NODE_ENV=production node -e \"import('adminjs').then(m => import('./src/admin/options.js').then(o => new m.default(o.adminOptions).initialize().then(() => { console.log('✅ Bundle Created'); process.exit(0); } )))\"",    "seed": "node seed.js",
+    "seed": "node seed.js",
     "dev": "nodemon src/server.js"
   },
   "keywords": [],
@@ -25,7 +22,8 @@
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.20.0",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.37.8"
+    "sequelize": "^6.37.8",
+    "esbuild": "^0.20.2" 
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

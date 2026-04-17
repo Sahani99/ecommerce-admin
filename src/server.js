@@ -133,58 +133,52 @@ const start = async () => {
   const app = express();
   app.use(express.json());
 
-  const admin = new AdminJS(adminOptions);
-
-  // CRITICAL FIX FOR RENDER:
-  if (process.env.NODE_ENV === 'production') {
-    // This tells AdminJS: "Read my .jsx files and build the production bundle now"
-    console.log('Generating production bundle...');
-    await admin.initialize(); 
-  } else {
-    // Local development watches for changes
-    admin.watch();
-  }
-
-  // API Routes
-  app.use('/api', authRoutes);
-
-  // Authenticated Router
-  const adminRouter = AdminJSExpress.buildAuthenticatedRouter(admin, {
-    authenticate: async (email, password) => {
-      const user = await User.findOne({ where: { email } });
-      if (user && await user.validPassword(password)) {
-        return { email: user.email, role: user.role, id: user.id };
-      }
-      return null;
-    },
-    cookieName: 'adminjs-session',
-    cookiePassword: process.env.SESSION_SECRET || 'a-very-secret-password-12345678',
-  }, null, {
-    resave: false,
-    saveUninitialized: true,
-    secret: process.env.SESSION_SECRET || 'a-very-secret-password-12345678',
-    cookie: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Use secure cookies on Render (HTTPS)
-      sameSite: 'lax'
-    }
-  });
-
-  app.use(admin.options.rootPath, adminRouter);
-  
-
-  app.use(admin.options.rootPath, adminRouter);
-
   try {
+    // 1. Connect and Sync Database FIRST
     await sequelize.authenticate();
-    await sequelize.sync();
-    const PORT = process.env.PORT || 5001;
-    // listen on 0.0.0.0 for Render
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Admin Panel: http://localhost:${PORT}/admin`);
+    await sequelize.sync(); 
+    console.log('✅ Database connected and synced.');
+
+    // 2. Initialize AdminJS
+    const admin = new AdminJS(adminOptions);
+
+    // 3. Generate Bundle for Production (Fixes the "Default Dashboard" issue)
+    if (process.env.NODE_ENV === 'production') {
+      console.log('Building production bundle...');
+      await admin.initialize(); 
+    }
+
+    // 4. API Routes
+    app.use('/api', authRoutes);
+
+    // 5. Auth Router
+    const adminRouter = AdminJSExpress.buildAuthenticatedRouter(admin, {
+      authenticate: async (email, password) => {
+        const user = await User.findOne({ where: { email } });
+        if (user && await user.validPassword(password)) {
+          return { email: user.email, role: user.role, id: user.id };
+        }
+        return null;
+      },
+      cookieName: 'adminjs-session',
+      cookiePassword: process.env.SESSION_SECRET || 'a-very-secret-password-12345678',
+    }, null, {
+      resave: false,
+      saveUninitialized: true,
+      secret: process.env.SESSION_SECRET || 'a-very-secret-password-12345678',
+      cookie: { httpOnly: true, secure: process.env.NODE_ENV === 'production' }
     });
+
+    app.use(admin.options.rootPath, adminRouter);
+
+    const PORT = process.env.PORT || 5001;
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Admin Panel: http://0.0.0.0:${PORT}/admin`);
+    });
+
   } catch (error) {
-    console.error('❌ Database error:', error);
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
   }
 };
 
