@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/server.js",
-    "build": "npx adminjs bundle",
+      "build": "node -e \"import('adminjs').then(m => import('./src/admin/options.js').then(o => new m.default(o.adminOptions).initialize().then(() => process.exit(0))))\"",
     "seed": "node seed.js",
     "dev": "nodemon src/server.js"
   },
