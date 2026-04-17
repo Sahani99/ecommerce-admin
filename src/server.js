@@ -70,6 +70,7 @@ import express from 'express';
 import AdminJS from 'adminjs';
 import AdminJSExpress from '@adminjs/express';
 import * as AdminJSSequelize from '@adminjs/sequelize';
+import path from 'path';
 import { sequelize, User } from './models/index.js';
 import { adminOptions } from './admin/options.js';
 import authRoutes from './routes/auth.js';
