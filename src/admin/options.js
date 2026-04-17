@@ -80,14 +80,22 @@ import { ComponentLoader } from 'adminjs'
 import { User, Product, Category, Order, OrderItem, Setting } from '../models/index.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import fs from 'fs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const componentLoader = new ComponentLoader()
 
-// FIX 1: Use path.join for better cross-platform (Mac vs Linux/Render) compatibility
-const Dashboard = componentLoader.add('Dashboard', path.join(__dirname, 'components', 'Dashboard.jsx'))
-const SettingsList = componentLoader.add('SettingsList', path.join(__dirname, 'components', 'SettingsList.jsx'))
+// Use absolute paths with validation for cross-platform compatibility
+const dashboardPath = path.resolve(__dirname, 'components', 'Dashboard.jsx')
+const settingsPath = path.resolve(__dirname, 'components', 'SettingsList.jsx')
+
+console.log('📂 Component paths:');
+console.log('  Dashboard:', dashboardPath, '- exists:', fs.existsSync(dashboardPath));
+console.log('  Settings:', settingsPath, '- exists:', fs.existsSync(settingsPath));
+
+const Dashboard = componentLoader.add('Dashboard', dashboardPath)
+const SettingsList = componentLoader.add('SettingsList', settingsPath)
 
 export const adminOptions = {
   rootPath: '/admin',

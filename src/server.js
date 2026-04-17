@@ -90,21 +90,18 @@ const start = async () => {
     // 2. Initialize AdminJS Instance
     const admin = new AdminJS(adminOptions);
 
-    // 3. BUILD BUNDLE (Crucial for Render and custom components)
-    // Always initialize to ensure custom React components are bundled
-    console.log('Building AdminJS bundle...');
-    await admin.initialize();
-
-    const adminAssetsPath = path.join(process.cwd(), '.adminjs');
-    app.use('/admin/frontend/assets', express.static(adminAssetsPath, { 
-      setHeaders: (res, filePath) => {
-        if (filePath.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript');
-        if (filePath.endsWith('.css')) res.setHeader('Content-Type', 'text/css');
-      }
-    }));
-
     // 4. API Login Route
     app.use('/api', authRoutes);
+
+    // 3. BUILD BUNDLE (Crucial for Render and custom components)
+    // Must be done BEFORE buildAuthenticatedRouter
+    console.log('🔨 Initializing AdminJS with custom components...');
+    try {
+      await admin.initialize();
+      console.log('✅ AdminJS bundle created successfully');
+    } catch (bundleError) {
+      console.warn('⚠️ Bundle initialization warning:', bundleError.message);
+    }
 
     // 5. AdminJS Authenticated Router
     const adminRouter = AdminJSExpress.buildAuthenticatedRouter(admin, {
@@ -129,8 +126,30 @@ const start = async () => {
     });
 
     // 6. Mount the Admin Router
-    // This router handles /admin/frontend/assets automatically!
+    // The adminRouter from buildAuthenticatedRouter handles all assets internally
     app.use(admin.options.rootPath, adminRouter);
+
+    // 7. CRITICAL: Fallback static route for components.bundle.js
+    // This ensures the custom components bundle is always served with correct MIME type
+    const fs = await import('fs');
+    const adminAssetsPath = path.join(process.cwd(), '.adminjs');
+    if (fs.default.existsSync(adminAssetsPath)) {
+      app.use('/admin/frontend/assets', express.static(adminAssetsPath, { 
+        maxAge: 0, // No caching to avoid stale bundles
+        setHeaders: (res, filePath) => {
+          res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+          if (filePath.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+          }
+          if (filePath.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css; charset=utf-8');
+          }
+        }
+      }));
+      console.log(`✅ Static assets mounted from ${adminAssetsPath}`);
+    } else {
+      console.warn(`⚠️ AdminJS assets directory not found at ${adminAssetsPath}`);
+    }
 
     const PORT = process.env.PORT || 5001;
     app.listen(PORT, '0.0.0.0', () => {
