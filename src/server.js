@@ -135,17 +135,20 @@ const start = async () => {
 
   const admin = new AdminJS(adminOptions);
 
-  // Requirement: Initialize bundling for production (Render)
+  // CRITICAL FIX FOR RENDER:
   if (process.env.NODE_ENV === 'production') {
-    await admin.initialize();
+    // This tells AdminJS: "Read my .jsx files and build the production bundle now"
+    console.log('Generating production bundle...');
+    await admin.initialize(); 
   } else {
-    // Optional: watch mode for local development
-    // await admin.watch(); 
+    // Local development watches for changes
+    admin.watch();
   }
 
-  // Requirement: API Login
+  // API Routes
   app.use('/api', authRoutes);
 
+  // Authenticated Router
   const adminRouter = AdminJSExpress.buildAuthenticatedRouter(admin, {
     authenticate: async (email, password) => {
       const user = await User.findOne({ where: { email } });
@@ -155,16 +158,20 @@ const start = async () => {
       return null;
     },
     cookieName: 'adminjs-session',
-    cookiePassword: process.env.SESSION_SECRET || 'secret-password-1234',
+    cookiePassword: process.env.SESSION_SECRET || 'a-very-secret-password-12345678',
   }, null, {
     resave: false,
     saveUninitialized: true,
-    secret: process.env.SESSION_SECRET || 'secret-password-1234',
+    secret: process.env.SESSION_SECRET || 'a-very-secret-password-12345678',
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'production', // Use secure cookies on Render (HTTPS)
+      sameSite: 'lax'
     }
   });
+
+  app.use(admin.options.rootPath, adminRouter);
+  
 
   app.use(admin.options.rootPath, adminRouter);
 
