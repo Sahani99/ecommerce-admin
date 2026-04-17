@@ -6,6 +6,7 @@ import session from 'express-session';
 import AdminJS from 'adminjs';
 import AdminJSExpress from '@adminjs/express';
 import * as AdminJSSequelize from '@adminjs/sequelize';
+import path from 'path';
 
 // Ensure these paths match your folder structure exactly
 import { sequelize, User } from './models/index.js';
@@ -17,7 +18,9 @@ AdminJS.registerAdapter(AdminJSSequelize);
 
 const start = async () => {
 
-  app.use('/admin/frontend/assets', express.static(path.join(__dirname, '../.adminjs')));
+  // app.use('/admin/frontend/assets', express.static(path.join(__dirname, '../.adminjs')));
+  app.use('/admin/frontend/assets', express.static(path.join(process.cwd(), '.adminjs')));
+
 
   const app = express();
   app.use(express.json());
