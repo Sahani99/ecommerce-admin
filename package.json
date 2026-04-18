@@ -1,9 +1,11 @@
 {
   "name": "ecommerce-admin",
   "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
   "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/server.js",
-    "build": "node build-admin.js",
     "seed": "node seed.js",
     "dev": "nodemon src/server.js"
   },
@@ -18,7 +20,6 @@
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.4.1",
-    "esbuild": "^0.20.2",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "jsonwebtoken": "^9.0.3",
@@ -27,12 +28,6 @@
     "sequelize": "^6.37.8"
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.10",
-    "@types/node": "^25.6.0",
-    "@types/react": "^18.3.28",
     "nodemon": "^3.1.14"
-  },
-  "engines": {
-    "node": "20.x"
   }
 }

@@ -1,127 +1,71 @@
-
-// // src/admin/options.js
-// import { ComponentLoader } from 'adminjs'
-// import { User, Product, Category, Order, OrderItem, Setting } from '../models/index.js'
-// import path from 'path'
-// import { fileURLToPath } from 'url'
-
-// const __filename = fileURLToPath(import.meta.url)
-// const __dirname = path.dirname(__filename)
-// const componentLoader = new ComponentLoader()
-
-// // Absolute paths are safer for Linux (Render)
-// const Dashboard = componentLoader.add('Dashboard', path.resolve(__dirname, './components/Dashboard.jsx'))
-// const SettingsList = componentLoader.add('SettingsList', path.resolve(__dirname, './components/SettingsList.jsx'))
-
-// export const adminOptions = {
-//   rootPath: '/admin',
-//   branding: {
-//     companyName: 'E-Shop Admin',
-//     withMadeWithLove: false,
-//   },
-//   resources: [
-//     {
-//       resource: User,
-//       options: {
-//         navigation: { name: 'Users', icon: 'User' },
-//         properties: { password: { isVisible: false } },
-//         actions: {
-//           list: { isAccessible: ({ currentAdmin }) => currentAdmin?.role === 'admin' },
-//           new: { isAccessible: ({ currentAdmin }) => currentAdmin?.role === 'admin' },
-//           edit: { isAccessible: ({ currentAdmin }) => currentAdmin?.role === 'admin' },
-//           delete: { isAccessible: ({ currentAdmin }) => currentAdmin?.role === 'admin' },
-//         }
-//       }
-//     },
-//     {
-//       resource: Setting,
-//       options: {
-//         navigation: { name: 'System', icon: 'Settings' },
-//         actions: {
-//           list: { isAccessible: ({ currentAdmin }) => currentAdmin?.role === 'admin' },
-//         },
-//         components: { list: SettingsList }
-//       }
-//     },
-//     { resource: Category, options: { navigation: { name: 'Shop', icon: 'Folder' } } },
-//     { resource: Product, options: { navigation: { name: 'Shop', icon: 'Package' } } },
-//     { resource: Order, options: { navigation: { name: 'Sales', icon: 'ShoppingBag' } } },
-//     { resource: OrderItem, options: { navigation: { name: 'Sales', icon: 'List' } } }
-//   ],
-//   componentLoader,
-//   dashboard: {
-//     component: Dashboard,
-//     // CRITICAL: Assignment Requirement - Handler for summary info
-//     handler: async (request, response, context) => {
-//       const { currentAdmin } = context;
-//       const isAdmin = currentAdmin?.role === 'admin';
-
-//       if (!isAdmin) return { isAdmin: false };
-
-//       const [userCount, orderCount, productCount, revenue] = await Promise.all([
-//         User.count().catch(() => 0),
-//         Order.count().catch(() => 0),
-//         Product.count().catch(() => 0),
-//         Order.sum('totalAmount').catch(() => 0)
-//       ]);
-
-//       return {
-//         userCount,
-//         orderCount,
-//         productCount,
-//         revenue: revenue || 0,
-//         isAdmin: true
-//       };
-//     }
-//   }
-// }
-
+// admin/options.js - FINAL VERSION
 import { ComponentLoader } from 'adminjs'
 import { User, Product, Category, Order, OrderItem, Setting } from '../models/index.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import fs from 'fs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const componentLoader = new ComponentLoader()
 
-// Use absolute paths with validation for cross-platform compatibility
-const dashboardPath = path.resolve(__dirname, 'components', 'Dashboard.jsx')
-const settingsPath = path.resolve(__dirname, 'components', 'SettingsList.jsx')
-
-console.log('📂 Component paths:');
-console.log('  Dashboard:', dashboardPath, '- exists:', fs.existsSync(dashboardPath));
-console.log('  Settings:', settingsPath, '- exists:', fs.existsSync(settingsPath));
-
-const Dashboard = componentLoader.add('Dashboard', dashboardPath)
-const SettingsList = componentLoader.add('SettingsList', settingsPath)
+const Dashboard = componentLoader.add('Dashboard', path.resolve(__dirname, './components/Dashboard.jsx'))
+const SettingsList = componentLoader.add('SettingsList', path.resolve(__dirname, './components/SettingsList.jsx'))
 
 export const adminOptions = {
+  componentLoader,
   rootPath: '/admin',
   branding: {
     companyName: 'E-Shop Admin',
     withMadeWithLove: false,
   },
   resources: [
+    // --- USER MANAGEMENT GROUP ---
     {
       resource: User,
       options: {
         navigation: { name: 'Users', icon: 'User' },
-        // Requirement 3: Ensure Email is the "Title" so it shows up in Order lookups
         properties: { 
-          email: { isTitle: true },
-          password: { isVisible: false } 
+          password: { isVisible: false },
+          role: { availableValues: [ { value: 'admin', label: 'Admin' }, { value: 'user', label: 'User' } ] }
         },
         actions: {
-          // Requirement 5: RBAC - Hide from regular users
           list: { isAccessible: ({ currentAdmin }) => currentAdmin?.role === 'admin' },
-          new: { isAccessible: ({ currentAdmin }) => currentAdmin?.role === 'admin' },
-          edit: { isAccessible: ({ currentAdmin }) => currentAdmin?.role === 'admin' },
-          delete: { isAccessible: ({ currentAdmin }) => currentAdmin?.role === 'admin' },
         }
       }
     },
+    // --- SHOP GROUP ---
+    {
+      resource: Product,
+      options: {
+        navigation: { name: 'Shop', icon: 'Package' },
+        properties: {
+          description: { type: 'richtext' },
+          price: { type: 'currency', props: { symbol: '$' } }
+        }
+      }
+    },
+    {
+      resource: Category,
+      options: { navigation: { name: 'Shop', icon: 'Folder' } }
+    },
+    // --- SALES GROUP ---
+    {
+      resource: Order,
+      options: {
+        navigation: { name: 'Sales', icon: 'ShoppingBag' },
+        properties: {
+          userId: { isTitle: false }, // Use the reference instead
+          totalAmount: { type: 'currency', props: { symbol: '$' } }
+        }
+      }
+    },
+    {
+      resource: OrderItem,
+      options: {
+        navigation: { name: 'Sales', icon: 'List' },
+      }
+    },
+    // --- SYSTEM GROUP ---
     {
       resource: Setting,
       options: {
@@ -131,73 +75,77 @@ export const adminOptions = {
         },
         components: { list: SettingsList }
       }
-    },
-    { 
-      resource: Category, 
-      options: { 
-        navigation: { name: 'Shop', icon: 'Folder' },
-        properties: { name: { isTitle: true } }
-      } 
-    },
-    { 
-      resource: Product, 
-      options: { 
-        navigation: { name: 'Shop', icon: 'Package' },
-        properties: {
-          name: { isTitle: true }, // Shows Product Name in Order Items
-          description: { type: 'richtext' },
-          price: { type: 'currency', props: { symbol: '$' } }
-        }
-      } 
-    },
-    { 
-      resource: Order, 
-      options: { 
-        navigation: { name: 'Sales', icon: 'ShoppingBag' },
-        properties: {
-          totalAmount: { type: 'currency', props: { symbol: '$' } }
-        }
-      } 
-    },
-    { 
-      resource: OrderItem, 
-      options: { navigation: { name: 'Sales', icon: 'List' } } 
     }
   ],
-  componentLoader,
+  
+  // dashboard: {
+  //   handler: async (request, response, context) => {
+  //     console.log("DASHBOARD HIT");
+  //     const { currentAdmin } = context;
+  //     const role = currentAdmin?.role || '';
+  //     const isAdmin = role === 'admin';
+
+  //     if (!isAdmin) {
+  //       return {
+  //         userCount: 0,
+  //         orderCount: 0,
+  //         productCount: 0,
+  //         revenue: 0,
+  //         isAdmin: false
+  //       };
+  //     }
+
+  //     try {
+  //       const userCount = await User.count();
+  //       console.log("Users:", userCount);
+  //       const orderCount = await Order.count();
+  //       const productCount = await Product.count();
+  //       const revenue = await Order.sum('totalAmount');
+
+  //       return {
+  //         userCount: userCount || 0,
+  //         orderCount: orderCount || 0,
+  //         productCount: productCount || 0,
+  //         revenue: revenue || 0,
+  //         isAdmin: true
+  //       };
+  //     } catch (error) {
+  //       console.error("Error fetching dashboard stats:", error);
+  //       return { userCount: 0, orderCount: 0, productCount: 0, revenue: 0, error: error.message };
+  //     }
+  //   },
+  //   component: Dashboard
+  // }
+
   dashboard: {
-    component: Dashboard,
-    handler: async (request, response, context) => {
-      const { currentAdmin } = context;
-      
-      // FIX 2: Added more safety checks for RBAC
-      const role = currentAdmin?.role?.toLowerCase();
-      const isAdmin = role === 'admin';
+  handler: async (request, response, context) => {
+    console.log("DASHBOARD HANDLER CALLED");
+    console.log("Context currentAdmin:", context?.currentAdmin);
 
-      if (!isAdmin) {
-        return { isAdmin: false, userEmail: currentAdmin?.email };
-      }
+    const isAdmin = context?.currentAdmin?.role === 'admin';
 
-      try {
-        // Requirement 5: Dashboard summary information
-        const [userCount, orderCount, productCount, revenue] = await Promise.all([
-          User.count().catch(() => 0),
-          Order.count().catch(() => 0),
-          Product.count().catch(() => 0),
-          Order.sum('totalAmount').catch(() => 0)
-        ]);
-
-        return {
-          userCount,
-          orderCount,
-          productCount,
-          revenue: revenue || 0,
-          isAdmin: true
-        };
-      } catch (error) {
-        console.error('Dashboard Handler Error:', error);
-        return { isAdmin: true, error: 'Stats unavailable' };
-      }
+    if (!isAdmin) {
+      return { userCount: 0, orderCount: 0, productCount: 0, revenue: 0, isAdmin: false };
     }
-  }
+
+    try {
+      const [userCount, orderCount, productCount, revenue] = await Promise.all([
+        User.count(),
+        Order.count(),
+        Product.count(),
+        Order.sum('totalAmount'),
+      ]);
+      console.log("Stats:", { userCount, orderCount, productCount, revenue });
+      return { userCount, orderCount, productCount, revenue: revenue || 0, isAdmin: true };
+    } catch (error) {
+      console.error("Dashboard handler error:", error);
+      return { userCount: 0, orderCount: 0, productCount: 0, revenue: 0, isAdmin: true, error: error.message };
+    }
+  },
+  component: Dashboard
 }
+
+ 
+}
+
+

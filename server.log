@@ -1,0 +1,44 @@
+
+> ecommerce-admin@1.0.0 start
+> node src/server.js
+
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+Connecting to database: postgres://kpsrandula:password123@localhost:5432/ecommerce_db
+"Button", "Icon" and "Badge" are imported from external module "@adminjs/design-system" but never used in "src/admin/components/SettingsList.jsx".
+- Bundling files...
+"Button", "Icon" and "Badge" are imported from external module "@adminjs/design-system" but never used in "src/admin/components/SettingsList.jsx".
+✔ Finish bundling: 3 files
+✅ Database connected.
+User model table: Users
+🚀 Admin Panel: http://localhost:5001/admin
+🔑 Login API: http://localhost:5001/api/login
+- Bundling files...
+"Button", "Icon" and "Badge" are imported from external module "@adminjs/design-system" but never used in "src/admin/components/SettingsList.jsx".
+✔ Finish bundling: 3 files
+- Bundling files...
+"Button", "Icon" and "Badge" are imported from external module "@adminjs/design-system" but never used in "src/admin/components/SettingsList.jsx".
+✔ Finish bundling: 3 files
+- Bundling files...
+"Button", "Icon" and "Badge" are imported from external module "@adminjs/design-system" but never used in "src/admin/components/SettingsList.jsx".
+✔ Finish bundling: 3 files
+- Bundling files...
+"Button", "Icon" and "Badge" are imported from external module "@adminjs/design-system" but never used in "src/admin/components/SettingsList.jsx".
+✔ Finish bundling: 3 files
+- Bundling files...
+"Button", "Icon" and "Badge" are imported from external module "@adminjs/design-system" but never used in "src/admin/components/SettingsList.jsx".
+✔ Finish bundling: 3 files
+- Bundling files...
+"Button", "Icon" and "Badge" are imported from external module "@adminjs/design-system" but never used in "src/admin/components/SettingsList.jsx".
+✔ Finish bundling: 3 files
+- Bundling files...
+"Button", "Icon" and "Badge" are imported from external module "@adminjs/design-system" but never used in "src/admin/components/SettingsList.jsx".
+✔ Finish bundling: 3 files
+- Bundling files...
+"Button", "Icon" and "Badge" are imported from external module "@adminjs/design-system" but never used in "src/admin/components/SettingsList.jsx".
+✔ Finish bundling: 3 files
+- Bundling files...
+"Button", "Icon" and "Badge" are imported from external module "@adminjs/design-system" but never used in "src/admin/components/SettingsList.jsx".
+✔ Finish bundling: 3 files
+- Bundling files...
+"Button", "Icon" and "Badge" are imported from external module "@adminjs/design-system" but never used in "src/admin/components/SettingsList.jsx".
+✔ Finish bundling: 3 files

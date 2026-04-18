@@ -5,7 +5,7 @@ const router = express.Router();
 
 // This is your new custom dashboard stats api
 router.get('/stats', authenticateJWT, async (req, res) => {
-    console.log("Dashboard API /stats was called!"); // This will show in terminal!
+    console.log("Dashboard API /stats was called!");
     try {
         const { role } = req.user || {};
         if (role !== 'admin') {

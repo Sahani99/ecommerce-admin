@@ -1,4 +1,4 @@
-import { sequelize, User, Category, Product } from './src/models/index.js';
+import { sequelize, User, Category, Product, Order, OrderItem } from './src/models/index.js';
 
 const seedDatabase = async () => {
   try {
@@ -31,7 +31,7 @@ const seedDatabase = async () => {
     });
 
     // 5. Create initial Product
-    await Product.create({
+    const laptop = await Product.create({
       name: 'Laptop Pro',
       description: 'High performance laptop',
       price: 1200.00,
@@ -39,6 +39,36 @@ const seedDatabase = async () => {
       categoryId: electronics.id, // Linking to the category created above
     });
     console.log('✅ Demo Category and Product created');
+
+    // 6. Create sample Orders
+    const order1 = await Order.create({
+      userId: admin.id,
+      totalAmount: 1200.00,
+      status: 'completed'
+    });
+
+    const order2 = await Order.create({
+      userId: admin.id,
+      totalAmount: 2400.00,
+      status: 'completed'
+    });
+
+    // Create OrderItems for the orders
+    await OrderItem.create({
+      orderId: order1.id,
+      productId: laptop.id,
+      quantity: 1,
+      price: 1200.00
+    });
+
+    await OrderItem.create({
+      orderId: order2.id,
+      productId: laptop.id,
+      quantity: 2,
+      price: 1200.00
+    });
+
+    console.log('✅ Sample Orders and OrderItems created');
 
     console.log('🚀 Seeding completed successfully!');
     process.exit(0);
