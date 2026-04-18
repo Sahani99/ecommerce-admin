@@ -85,7 +85,7 @@ const Dashboard = (props) => {
           <StatBox label="Total Users" value={data.userCount} />
           <StatBox label="Total Orders" value={data.orderCount} />
           <StatBox label="Products" value={data.productCount} />
-          <StatBox label="Revenue" value={`$${Number(data.revenue).toFixed(2)}`} />
+          <StatBox label="Revenue" value={`${Number(data.revenue).toFixed(2)}`} />
         </Box>
       ) : (
         <Box display="flex" flexDirection="row" flexWrap="wrap">

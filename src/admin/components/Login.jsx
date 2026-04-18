@@ -19,8 +19,8 @@ const Login = () => {
         boxShadow="card"
         textAlign="center"
       >
-        <H1 color="primary100">E-Shop Admin Login</H1>
-        <Text marginBottom="xl">Please sign in to access the admin panel</Text>
+        <H1 color="primary100">E-Shop Login</H1>
+        <Text marginBottom="xl">Please sign in</Text>
         <form method="POST" action="/admin/login">
           <FormGroup>
             <Label htmlFor="email">Email</Label>

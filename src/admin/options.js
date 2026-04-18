@@ -49,7 +49,7 @@ export const adminOptions = {
           description: { type: 'richtext' },
           price: { type: 'currency', props: { symbol: '$' } },
           categoryId: {
-            reference: 'Category',
+            reference: 'Categories',
             isFilterable: true
           }
         },
@@ -87,7 +87,7 @@ export const adminOptions = {
         navigation: { name: 'Sales', icon: 'ShoppingBag' },
         properties: {
           userId: {
-            reference: 'User',
+            reference: 'Users',
             isFilterable: true
           },
           totalAmount: { type: 'currency', props: { symbol: '$' } }
