@@ -39,7 +39,7 @@ const start = async () => {
         const user = await User.findOne({ where: { email } });
         if (user && await user.validPassword(password)) {
           const token = jwt.sign(
-            { id: user.id, email: user.email, role: user.role },
+            { id: user.id, email: user.email, role: user.role, name: user.name },
             process.env.JWT_SECRET || 'fallback_jwt_secret',
             { expiresIn: '1h' }
           );
@@ -55,7 +55,8 @@ const start = async () => {
           return {
             email: user.email,
             role: user.role, // Must be exactly 'admin' or 'user'
-            id: user.id
+            id: user.id,
+            name: user.name
           };
         }
       } catch (err) {

@@ -77,7 +77,7 @@ const Dashboard = (props) => {
     <Box padding="xl">
       <Box variant="white" padding="xl" marginBottom="xl" boxShadow="card">
         <H2>E-Shop Control Center</H2>
-        <Text>Logged in as: <b>{data.isAdmin ? 'Administrator' : 'Staff'}</b></Text>
+        <Text>Logged in as: <b>{data.isAdmin ? 'Administrator' : `Welcome ${data.userName || 'User'}`}</b></Text>
       </Box>
 
       {data.isAdmin ? (
@@ -88,9 +88,10 @@ const Dashboard = (props) => {
           <StatBox label="Revenue" value={`$${Number(data.revenue).toFixed(2)}`} />
         </Box>
       ) : (
-        <Box variant="white" padding="xl">
-          <H3>User Dashboard</H3>
-          <Text>Use the sidebar to manage Categories and Products.</Text>
+        <Box display="flex" flexDirection="row" flexWrap="wrap">
+          <StatBox label="My Orders" value={data.orderCount} />
+          <StatBox label="My Order Items" value={data.orderItems} />
+          <StatBox label="Available Products" value={data.availableProducts?.length || 0} />
         </Box>
       )}
     </Box>

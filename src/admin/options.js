@@ -1,5 +1,6 @@
 // admin/options.js - FINAL VERSION
 import { ComponentLoader } from 'adminjs'
+import { Op } from 'sequelize'
 import { User, Product, Category, Order, OrderItem, Setting } from '../models/index.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -10,6 +11,7 @@ const componentLoader = new ComponentLoader()
 
 const Dashboard = componentLoader.add('Dashboard', path.resolve(__dirname, './components/Dashboard.jsx'))
 const SettingsList = componentLoader.add('SettingsList', path.resolve(__dirname, './components/SettingsList.jsx'))
+const Login = componentLoader.override('Login', path.resolve(__dirname, './components/Login.jsx'))
 
 export const adminOptions = {
   componentLoader,
@@ -17,6 +19,11 @@ export const adminOptions = {
   branding: {
     companyName: 'E-Shop Admin',
     withMadeWithLove: false,
+  },
+  loginPath: '/admin/login',
+  logoutPath: '/admin/logout',
+  component: {
+    Login
   },
   resources: [
     // --- USER MANAGEMENT GROUP ---
@@ -40,7 +47,32 @@ export const adminOptions = {
         navigation: { name: 'Shop', icon: 'Package' },
         properties: {
           description: { type: 'richtext' },
-          price: { type: 'currency', props: { symbol: '$' } }
+          price: { type: 'currency', props: { symbol: '$' } },
+          categoryId: {
+            reference: 'Category',
+            isFilterable: true
+          }
+        },
+        actions: {
+          list: {
+            isAccessible: true,
+            before: async (request, context) => {
+              if (context.currentAdmin?.role !== 'admin') {
+                request.query = {
+                  ...request.query,
+                  filters: {
+                    ...request.query?.filters,
+                    stock: { [Op.gt]: 0 }
+                  }
+                };
+              }
+              return request;
+            }
+          }
+        },
+        sort: {
+          sortBy: 'categoryId',
+          direction: 'asc'
         }
       }
     },
@@ -54,8 +86,37 @@ export const adminOptions = {
       options: {
         navigation: { name: 'Sales', icon: 'ShoppingBag' },
         properties: {
-          userId: { isTitle: false }, // Use the reference instead
+          userId: {
+            reference: 'User',
+            isFilterable: true
+          },
           totalAmount: { type: 'currency', props: { symbol: '$' } }
+        },
+        actions: {
+          list: {
+            isAccessible: true,
+            before: async (request, context) => {
+              if (context.currentAdmin?.role !== 'admin') {
+                request.query = {
+                  ...request.query,
+                  filters: {
+                    ...request.query?.filters,
+                    userId: context.currentAdmin.id,
+                  },
+                };
+              }
+              return request;
+            }
+          },
+          show: {
+            isAccessible: ({ currentAdmin, record }) => currentAdmin?.role === 'admin' || record?.params?.userId === currentAdmin?.id
+          },
+          edit: {
+            isAccessible: ({ currentAdmin, record }) => currentAdmin?.role === 'admin' || record?.params?.userId === currentAdmin?.id
+          },
+          delete: {
+            isAccessible: ({ currentAdmin, record }) => currentAdmin?.role === 'admin' || record?.params?.userId === currentAdmin?.id
+          }
         }
       }
     },
@@ -63,6 +124,34 @@ export const adminOptions = {
       resource: OrderItem,
       options: {
         navigation: { name: 'Sales', icon: 'List' },
+        actions: {
+          list: {
+            isAccessible: true,
+            before: async (request, context) => {
+              if (context.currentAdmin?.role !== 'admin') {
+                // Filter order items where order.userId = currentAdmin.id
+                const userOrders = await Order.findAll({ where: { userId: context.currentAdmin.id }, attributes: ['id'] });
+                const orderIds = userOrders.map(o => o.id);
+                request.query = {
+                  ...request.query,
+                  filters: {
+                    ...request.query?.filters,
+                    orderId: orderIds,
+                  },
+                };
+              }
+              return request;
+            }
+          },
+          show: {
+            isAccessible: ({ currentAdmin, record }) => {
+              // Check if the order belongs to the user
+              return Order.findByPk(record?.params?.orderId).then(order => order?.userId === currentAdmin?.id || currentAdmin?.role === 'admin');
+            }
+          },
+          edit: { isAccessible: ({ currentAdmin }) => currentAdmin?.role === 'admin' },
+          delete: { isAccessible: ({ currentAdmin }) => currentAdmin?.role === 'admin' }
+        }
       }
     },
     // --- SYSTEM GROUP ---
@@ -123,9 +212,27 @@ export const adminOptions = {
     console.log("Context currentAdmin:", context?.currentAdmin);
 
     const isAdmin = context?.currentAdmin?.role === 'admin';
+    const userId = context?.currentAdmin?.id;
+    const userName = context?.currentAdmin?.name || context?.currentAdmin?.email;
 
     if (!isAdmin) {
-      return { userCount: 0, orderCount: 0, productCount: 0, revenue: 0, isAdmin: false };
+      try {
+        const userOrders = await Order.findAll({ where: { userId }, include: [{ model: OrderItem, as: 'items' }] });
+        const orderCount = userOrders.length;
+        const orderItems = userOrders.flatMap(order => order.items);
+        const availableProducts = await Product.findAll({ where: { stock: { [Op.gt]: 0 } }, include: [{ model: Category, as: 'category' }] });
+
+        return {
+          userName,
+          orderCount,
+          orderItems: orderItems.length,
+          availableProducts,
+          isAdmin: false
+        };
+      } catch (error) {
+        console.error("Dashboard handler error for user:", error);
+        return { userName, orderCount: 0, orderItems: 0, availableProducts: [], isAdmin: false, error: error.message };
+      }
     }
 
     try {
