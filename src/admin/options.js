@@ -166,46 +166,7 @@ export const adminOptions = {
       }
     }
   ],
-  
-  // dashboard: {
-  //   handler: async (request, response, context) => {
-  //     console.log("DASHBOARD HIT");
-  //     const { currentAdmin } = context;
-  //     const role = currentAdmin?.role || '';
-  //     const isAdmin = role === 'admin';
-
-  //     if (!isAdmin) {
-  //       return {
-  //         userCount: 0,
-  //         orderCount: 0,
-  //         productCount: 0,
-  //         revenue: 0,
-  //         isAdmin: false
-  //       };
-  //     }
-
-  //     try {
-  //       const userCount = await User.count();
-  //       console.log("Users:", userCount);
-  //       const orderCount = await Order.count();
-  //       const productCount = await Product.count();
-  //       const revenue = await Order.sum('totalAmount');
-
-  //       return {
-  //         userCount: userCount || 0,
-  //         orderCount: orderCount || 0,
-  //         productCount: productCount || 0,
-  //         revenue: revenue || 0,
-  //         isAdmin: true
-  //       };
-  //     } catch (error) {
-  //       console.error("Error fetching dashboard stats:", error);
-  //       return { userCount: 0, orderCount: 0, productCount: 0, revenue: 0, error: error.message };
-  //     }
-  //   },
-  //   component: Dashboard
-  // }
-
+ 
   dashboard: {
   handler: async (request, response, context) => {
     console.log("DASHBOARD HANDLER CALLED");
